@@ -1,11 +1,17 @@
 package server;
 
+import com.sun.security.ntlm.Client;
 import constants.Command;
+import javafx.stage.Modality;
 
+import javax.swing.*;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
+import java.util.concurrent.TimeoutException;
+
 
 public class ClientHandler {
     private Server server;
@@ -27,6 +33,7 @@ public class ClientHandler {
 
             new Thread(() -> {
                 try {
+                    socket.setSoTimeout(5000);
                     while (true) {
                         String str = in.readUTF();
                         if (str.startsWith("/")) {
@@ -40,8 +47,7 @@ public class ClientHandler {
                                 if (token.length < 3) {
                                     continue;
                                 }
-                                String newNick = server.getAuthService()
-                                        .getNicknameByLoginAndPassword(token[1], token[2]);
+                                String newNick = server.getAuthService().getNicknameByLoginAndPassword(token[1], token[2]);
                                 login = token[1];
                                 if (newNick != null) {
                                     if (!server.isLoginAuthenticated(login)) {
@@ -49,7 +55,7 @@ public class ClientHandler {
                                         sendMsg("/auth_ok " + nickname);
                                         authenticated = true;
                                         server.subscribe(this);
-                                        //???????? ???? ? ?????????? ?????? ???????
+
                                         server.broadcastMsg(this, "connect");
                                         break;
                                     } else {
@@ -74,6 +80,7 @@ public class ClientHandler {
                         }
                     }
                     while (authenticated) {
+                        socket.setSoTimeout(0);
                         String str = in.readUTF();
 
                         if (str.startsWith("/")) {
@@ -94,12 +101,19 @@ public class ClientHandler {
                         }
                     }
                     //SocketTimeoutException
+                } catch (SocketTimeoutException e) {
+                    e.printStackTrace();
+                    sendMsg("TIME IS OVER");
+                    System.out.println("TIME IS OVER");
+                    JOptionPane.showMessageDialog(null, "TIME IS OVER");
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
                     server.unsubscribe(this);
                     server.broadcastMsg(this, "disconnect");
-                    System.out.println("Client disconnected");
+                    System.out.println(" Client disconnected");
+
                     try {
                         socket.close();
                     } catch (IOException e) {

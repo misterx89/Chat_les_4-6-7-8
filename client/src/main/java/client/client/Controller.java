@@ -52,7 +52,7 @@ public class Controller implements Initializable {
     private String nickname;
     private Stage stage;
     private Stage regStage;
-    private RegController regController;
+    private client.RegController regController;
 
     public void setAuthenticated(boolean authenticated) {
         this.authenticated = authenticated;
@@ -98,7 +98,6 @@ public class Controller implements Initializable {
 
             new Thread(() -> {
                 try {
-                    //??????????????
                     while (true) {
                         String str = in.readUTF();
 
@@ -118,7 +117,7 @@ public class Controller implements Initializable {
                             textArea.appendText(str + "\n");
                         }
                     }
-                    //???????? ??????
+
                     while (authenticated) {
                         String str = in.readUTF();
 
@@ -147,6 +146,7 @@ public class Controller implements Initializable {
                     setAuthenticated(false);
                     try {
                         socket.close();
+                        System.exit(0);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -175,7 +175,7 @@ public class Controller implements Initializable {
             connect();
         }
 
-        String msg = String.format("/auth %s %s", loginField.getText().trim(), passwordField.getText().trim());
+        String msg = String.format(Command.AUTH + " %s %s", loginField.getText().trim(), passwordField.getText().trim());
         passwordField.clear();
 
         try {
