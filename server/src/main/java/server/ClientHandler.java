@@ -55,8 +55,8 @@ public class ClientHandler {
                                         sendMsg("/auth_ok " + nickname);
                                         authenticated = true;
                                         server.subscribe(this);
-
                                         server.broadcastMsg(this, "connect");
+                                        socket.setSoTimeout(0);
                                         break;
                                     } else {
                                         socket.close();
@@ -80,7 +80,6 @@ public class ClientHandler {
                         }
                     }
                     while (authenticated) {
-                        socket.setSoTimeout(0);
                         String str = in.readUTF();
 
                         if (str.startsWith("/")) {
@@ -95,17 +94,32 @@ public class ClientHandler {
                                 }
                                 server.privateMsg(this, token[1], token[2]);
                             }
+                            if (str.startsWith("/chnick")) {
+                                String[] token = str.split("\\s+", 2);
+                                if (token.length < 2) {
+                                    continue;
+                                }
+                                if (token[1].contains(" ")) {
+                                    sendMsg("??? ?? ????? ????????? ????????");
+                                    continue;
+                                }
+                                if (server.getAuthService().changeNick(this.nickname, token[1])) {
+                                    sendMsg("/yournickis " + token[1]);
+                                    sendMsg("???  ??? ??????? ??: " + token[1]);
+                                    this.nickname = token[1];
+                                    server.broadcastClientList();
+                                } else {
+                                    sendMsg("?? ??????? ???????? ???. ???" + token[1] + " ??? ??????????");
+                                }
+                            }
 
                         } else {
                             server.broadcastMsg(this, str);
                         }
                     }
-                    //SocketTimeoutException
+
                 } catch (SocketTimeoutException e) {
-                    e.printStackTrace();
-                    sendMsg("TIME IS OVER");
-                    System.out.println("TIME IS OVER");
-                    JOptionPane.showMessageDialog(null, "TIME IS OVER");
+                    sendMsg(Command.END);
 
                 } catch (IOException e) {
                     e.printStackTrace();
