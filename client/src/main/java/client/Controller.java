@@ -54,6 +54,8 @@ public class Controller implements Initializable {
     private Stage regStage;
     private client.RegController regController;
 
+    private String login;
+
     public void setAuthenticated(boolean authenticated) {
         this.authenticated = authenticated;
         authPanel.setVisible(!authenticated);
@@ -65,6 +67,7 @@ public class Controller implements Initializable {
 
         if (!authenticated) {
             nickname = "";
+            History.stop();
         }
 
         textArea.clear();
@@ -108,6 +111,8 @@ public class Controller implements Initializable {
                             if (str.startsWith(Command.AUTH_OK)) {
                                 nickname = str.split(" ")[1];
                                 setAuthenticated(true);
+                                textArea.appendText(History.getLast100LinesOfHistory(login));
+                                History.start(login);
                                 break;
                             }
                             if(str.equals("/reg_ok") || str.equals("/reg_no")){
@@ -115,6 +120,7 @@ public class Controller implements Initializable {
                             }
                         } else {
                             textArea.appendText(str + "\n");
+                            History.writeln(str);
                         }
                     }
 
@@ -138,6 +144,7 @@ public class Controller implements Initializable {
 
                         } else {
                             textArea.appendText(str + "\n");
+                            History.writeln(str);
                         }
                     }
                 } catch (IOException e) {
@@ -174,6 +181,8 @@ public class Controller implements Initializable {
         if (socket == null || socket.isClosed()) {
             connect();
         }
+
+        login = loginField.getText().trim();
 
         String msg = String.format(Command.AUTH + " %s %s", loginField.getText().trim(), passwordField.getText().trim());
         passwordField.clear();
