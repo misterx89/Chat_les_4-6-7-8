@@ -11,9 +11,12 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 public class ClientHandler {
+    private static final Logger logger = Logger.getLogger(ClientHandler.class.getName());
     private Server server;
     private Socket socket;
     private DataInputStream in;
@@ -58,12 +61,14 @@ public class ClientHandler {
                                         server.subscribe(this);
                                         server.broadcastMsg(this, "connect");
                                         socket.setSoTimeout(0);
+                                        logger.info("Client " + nickname + " auth");
                                         break;
                                     } else {
                                         socket.close();
                                     }
                                 } else {
                                     sendMsg("Password is incorrect");
+                                    logger.info("Client " + nickname + " wrong password");
                                 }
                             }
 
@@ -121,18 +126,22 @@ public class ClientHandler {
 
                 } catch (SocketTimeoutException e) {
                     sendMsg(Command.END);
+                    logger.log(Level.SEVERE, e.getMessage(), e);
 
                 } catch (IOException e) {
                     e.printStackTrace();
+                    logger.log(Level.SEVERE, e.getMessage(), e);
                 } finally {
                     server.unsubscribe(this);
                     server.broadcastMsg(this, "disconnect");
-                    System.out.println(" Client disconnected");
+                    //System.out.println(" Client disconnected");
+                    logger.info("Client " + nickname + " disc");
 
                     try {
                         socket.close();
                     } catch (IOException e) {
                         e.printStackTrace();
+                        logger.log(Level.SEVERE, e.getMessage(), e);
                     }
                 }
 
@@ -141,6 +150,7 @@ public class ClientHandler {
 
         } catch (IOException e) {
             e.printStackTrace();
+            logger.log(Level.SEVERE, e.getMessage(), e);
         }
     }
 

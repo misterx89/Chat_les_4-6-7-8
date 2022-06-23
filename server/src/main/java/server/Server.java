@@ -7,11 +7,14 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Server {
+    private static final Logger logger = Logger.getLogger(Server.class.getName());
     private ServerSocket server;
     private Socket socket;
-    private final int PORT = 5054;
+    private final int PORT = 5059;
 
     private List<ClientHandler> clients;
     private AuthService authService;
@@ -32,16 +35,19 @@ public class Server {
 
         try {
             server = new ServerSocket(PORT);
-            System.out.println("Server started");
+            //System.out.println("Server started");
+            logger.info("Server started");
 
             while (true) {
                 socket = server.accept();
-                System.out.println("Client connected");
+                //System.out.println("Client connected");
+                logger.info("Client connected >>>> " + socket.getRemoteSocketAddress());
                 new ClientHandler(this, socket);
             }
 
         } catch (IOException e) {
             e.printStackTrace();
+            logger.log(Level.SEVERE, e.getMessage(), e);
         } finally {
             executorService.shutdown();
             SQLHandler.disconnect();
@@ -49,11 +55,13 @@ public class Server {
                 socket.close();
             } catch (IOException e) {
                 e.printStackTrace();
+                logger.log(Level.SEVERE, e.getMessage(), e);
             }
             try {
                 server.close();
             } catch (IOException e) {
                 e.printStackTrace();
+                logger.log(Level.SEVERE, e.getMessage(), e);
             }
         }
     }
